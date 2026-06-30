@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APP-华东组 · 经营看板 W25</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --pri:#0d5eff;--pri-l:#dce8ff;--pri-d:#0040cc;
+  --ok:#17C490;--warn:#F59E0B;--err:#EF4444;--pur:#7c3aed;
+  --bg:#eef1f8;--card:#fff;--bdr:#e2e8f0;
+  --tx:#1e293b;--mt:#64748b;--sb:#94a3b8;
+  --sw:220px;--th:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC','Inter',sans-serif;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.tb{position:fixed;top:0;left:0;right:0;height:var(--th);background:#fff;border-bottom:1px solid var(--bdr);z-index:100;display:flex;align-items:center;padding:0 20px 0 calc(var(--sw)+20px);gap:14px}
+.tb .tn{font-size:15px;font-weight:700;color:var(--pri);white-space:nowrap}
+.tb .sep{color:var(--bdr);font-size:16px}
+.tb .mi{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--mt)}
+.tb .mi b{color:var(--tx);font-weight:600}
+.tb .bdg{font-size:10px;padding:2px 7px;border-radius:10px;background:#fef3c7;color:#92400e;font-weight:600}
+.tb .sp{flex:1}
+.lb{font-size:11px;padding:4px 10px;border:1px solid var(--bdr);border-radius:6px;background:#f8fafc;color:var(--mt);cursor:pointer}
+.lb:hover{border-color:var(--pri);color:var(--pri)}
+.sb-wrap{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:#fff;border-right:1px solid var(--bdr);z-index:200;display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:13px 15px 11px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
+.sb-logo .d{width:7px;height:7px;border-radius:50%;background:var(--pri)}
+.sb-logo .t{font-size:12.5px;font-weight:700;color:var(--tx)}
+.sb-logo .s{font-size:10px;color:var(--mt)}
+.ns{padding:9px 8px 3px;font-size:9.5px;font-weight:600;color:var(--sb);letter-spacing:.1em;text-transform:uppercase}
+.nl{display:flex;align-items:center;gap:7px;padding:7px 11px;margin:1px 5px;border-radius:7px;font-size:12px;color:var(--mt);text-decoration:none;cursor:pointer;transition:.12s}
+.nl:hover{background:var(--pri-l);color:var(--pri)}
+.nl.act{background:var(--pri-l);color:var(--pri);font-weight:600}
+.nl .ic{font-size:13px;width:17px;text-align:center;flex-shrink:0}
+.sb-ft{margin-top:auto;padding:10px 13px;border-top:1px solid var(--bdr);font-size:9.5px;color:var(--sb);line-height:1.6}
+.main{margin-left:var(--sw);margin-top:var(--th);height:calc(100vh - var(--th));overflow-y:auto;padding:18px 20px}
+.card{background:var(--card);border-radius:12px;border:1px solid var(--bdr);padding:16px 18px}
+.ct{font-size:12.5px;font-weight:600;color:var(--tx);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.ct .db{font-size:10px;padding:1px 5px;border-radius:4px;background:#f1f5f9;color:var(--mt);font-weight:400}
+.cs{font-size:11px;color:var(--mt);margin-bottom:10px;line-height:1.5}
+.fq{background:#f8fafc;border-left:3px solid var(--pri);border-radius:0 6px 6px 0;padding:8px 12px;margin-bottom:14px;font-size:11.5px;color:var(--tx);line-height:1.5}
+.fq .fql{font-weight:700;color:var(--pri);font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.sh{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.sh .si{font-size:15px}
+.sh .st{font-size:14px;font-weight:700;color:var(--tx)}
+.sh .sb2{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--pri-l);color:var(--pri);font-weight:600}
+.divider{height:1px;background:var(--bdr);margin:18px 0}
+.kg4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:10px}
+.kg5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:18px}
+.kc{background:var(--card);border-radius:9px;border:1px solid var(--bdr);padding:12px 14px;position:relative;overflow:hidden}
+.kc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.kc.cp::before{background:var(--pri)}.kc.co::before{background:var(--ok)}.kc.cw::before{background:var(--warn)}.kc.cv::before{background:var(--pur)}.kc.cm::before{background:var(--sb)}
+.kl{font-size:10.5px;color:var(--mt);margin-bottom:5px}
+.kv{font-size:20px;font-weight:700;color:var(--tx);line-height:1.1}
+.kv .u{font-size:11px;font-weight:400;color:var(--mt);margin-left:2px}
+.kv .na{font-size:13px;color:var(--sb)}
+.kch{font-size:10.5px;color:var(--mt);margin-top:3px}
+.kn{font-size:9.5px;color:var(--sb);margin-top:1px}
+.ib{border-radius:7px;padding:9px 12px;font-size:11.5px;line-height:1.6;margin-top:10px}
+.ib.st{background:#f0f9ff;border-left:3px solid #0ea5e9;color:#0c4a6e}
+.ib.wn{background:#fffbeb;border-left:3px solid var(--warn);color:#78350f}
+.ib.dg{background:#fff1f2;border-left:3px solid var(--err);color:#881337}
+.ib.ps{background:#f0fdf4;border-left:3px solid var(--ok);color:#14532d}
+.ir{display:flex;gap:7px;margin-bottom:3px}
+.ir:last-child{margin-bottom:0}
+.ii{flex-shrink:0;font-size:12px;margin-top:1px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g46{display:grid;grid-template-columns:4fr 6fr;gap:14px}
+.g64{display:grid;grid-template-columns:6fr 4fr;gap:14px}
+.g37{display:grid;grid-template-columns:3fr 7fr;gap:14px}
+.gcol{display:flex;flex-direction:column;gap:14px}
+.dt{width:100%;border-collapse:collapse;font-size:11.5px}
+.dt th{background:#f8fafc;font-size:10.5px;font-weight:600;color:var(--mt);text-align:left;padding:6px 9px;border-bottom:2px solid var(--bdr)}
+.dt th.r{text-align:right}
+.dt td{padding:6px 9px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.dt td.r{text-align:right;font-family:Inter,sans-serif;font-variant-numeric:tabular-nums}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:#f8fafc}
+.rb{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600}
+.rb.hi{background:#dcfce7;color:#166534}.rb.md{background:#fefce8;color:#713f12}.rb.lo{background:#fee2e2;color:#991b1b}
+.rb.neu{background:#f1f5f9;color:#64748b}
+.gw-compact{display:grid;grid-template-columns:130px 220px 1fr;gap:16px;align-items:center}
+.gc-sm{position:relative;width:130px;height:130px}
+.pb{background:#f8fafc;border-radius:7px;padding:10px 13px}
+.pbl{font-size:11px;font-weight:600;color:var(--tx);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.pbo{height:7px;background:#e4ecf8;border-radius:3px;overflow:hidden}
+.pbi{height:100%;border-radius:3px;transition:width .6s}
+.bleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:10.5px;color:var(--mt)}
+.bleg span{display:flex;align-items:center;gap:4px}
+.bleg .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;border:2px dashed var(--bdr);border-radius:10px;color:var(--sb)}
+.sa{scroll-margin-top:70px}
+.blob{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.3}
+.b1{width:380px;height:380px;background:#bbd4ff;top:-80px;right:-60px}
+.b2{width:280px;height:280px;background:#c7f7e9;bottom:120px;right:180px}
+html[lang="en"] .zh{display:none}
+html[lang="zh"] .en{display:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<aside class="sb-wrap">
+  <div class="sb-logo"><div class="d"></div><div><div class="t">优化部 · 经营看板</div><div class="s">APP-华东组 W25</div></div></div>
+  <div class="ns">概览</div>
+  <a class="nl act" onclick="goto('s-kpi')"><span class="ic">📊</span><span>核心 KPI</span></a>
+  <a class="nl" onclick="goto('s-target')"><span class="ic">🎯</span><span>Q2 目标达成</span></a>
+  <div class="ns">业务产出</div>
+  <a class="nl" onclick="goto('s-trend')"><span class="ic">📈</span><span>趋势 · 8周</span></a>
+  <a class="nl" onclick="goto('s-client')"><span class="ic">🏢</span><span>客户消耗趋势</span></a>
+  <div class="ns">团队人效</div>
+  <a class="nl" onclick="goto('s-hr')"><span class="ic">⚡</span><span>人效 · 对比与负荷</span></a>
+  <a class="nl" onclick="goto('s-alloc')"><span class="ic">🗂</span><span>客户 FTE 效率对比</span></a>
+  <a class="nl" onclick="goto('s-wt')"><span class="ic">🕐</span><span>工时分布</span></a>
+  <div class="sb-ft">数据：Marvy经营看板W25<br>W18–W25 · APP-华东组 · 2026<br>FTE：正式×1.0，实习×0.2</div>
+</aside>
+
+<header class="tb">
+  <div class="tn">APP-华东组</div>
+  <div class="sep">|</div>
+  <div class="mi"><b>GL</b>&nbsp;魏星（App优化总监）</div>
+  <div class="sep">|</div>
+  <div class="mi"><b>W25</b>&nbsp;2026-06-16 ~ 06-22</div>
+  <div class="sep">|</div>
+  <div class="mi"><b>FTE</b>&nbsp;17.6&nbsp;<span class="zh">（正式16×1.0 + 实习8×0.2）</span></div>
+  <div class="sep">|</div>
+  <div class="mi"><b class="zh">客户</b>&nbsp;28</div>
+  <div class="sep">|</div>
+  <div class="mi"><b>SKU</b>&nbsp;56&nbsp;<span class="zh">（项目×媒体）</span></div>
+  <div class="bdg">W25 实数</div>
+  <div class="sp"></div>
+  <button class="lb" onclick="toggleLang()">中 / EN</button>
+</header>
+
+<main class="main" id="main" onscroll="onScroll()">
+
+<!-- KPI -->
+<div class="sa" id="s-kpi"></div>
+<div class="kg4">
+  <div class="kc cp">
+    <div class="kl">🏦 周代投消耗 W25</div>
+    <div class="kv">66.61<span class="u">万</span></div>
+    <div class="kch">W24: 71.58万&nbsp;<span style="color:var(--err)">▼6.9%</span></div>
+    <div class="kn">消耗基本持平</div>
+  </div>
+  <div class="kc co">
+    <div class="kl">💼 周预估服务费</div>
+    <div class="kv">2.828<span class="u">万</span></div>
+    <div class="kch">费率 4.25%&nbsp;<span style="color:var(--err)">▼ vs W24 4.31%</span></div>
+    <div class="kn">费率下降，关注合同结构</div>
+  </div>
+  <div class="kc co">
+    <div class="kl">📅 当月预估服务费</div>
+    <div class="kv">22.81<span class="u">万</span></div>
+    <div class="kch" style="color:var(--mt)">6月预估总收入</div>
+    <div class="kn">含本周已确认及预估金额</div>
+  </div>
+  <div class="kc cm">
+    <div class="kl">🏢 服务客户数</div>
+    <div class="kv">28<span class="u zh">个</span></div>
+    <div class="kch">SKU 56 <span class="zh">（项目×媒体）</span></div>
+    <div class="kn">W25 活跃 SKU 数</div>
+  </div>
+</div>
+<div class="kg4">
+  <div class="kc cp">
+    <div class="kl">👤 人均消耗 / FTE</div>
+    <div class="kv">3.785<span class="u zh">万/FTE</span></div>
+    <div class="kch">66.61万 ÷ 17.6 FTE</div>
+  </div>
+  <div class="kc cp">
+    <div class="kl">📦 人均 SKU</div>
+    <div class="kv">3.18<span class="u">SKU</span></div>
+    <div class="kch">56 SKU ÷ 17.6 FTE</div>
+  </div>
+  <div class="kc cp">
+    <div class="kl">☀ 日均消耗</div>
+    <div class="kv">9.52<span class="u zh">万/天</span></div>
+    <div class="kch">66.61 ÷ 7天</div>
+  </div>
+  <div class="kc co">
+    <div class="kl">⚡ Revenue per FTE</div>
+    <div class="kv">0.1607<span class="u zh">万/FTE</span></div>
+    <div class="kch">2.828万 ÷ 17.6 FTE · W25</div>
+  </div>
+</div>
+
+<!-- Q2 TARGET -->
+<div class="sa" id="s-target"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">🎯</span><span class="st zh">Q2 APP行业收入目标达成</span><span class="sb2">APP行业共享目标</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>Q2 还差多少？按当前速度能完成吗？剩余时间够用吗？</div>
+<div class="card" style="margin-bottom:14px">
+  <div class="gw-compact">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div class="gc-sm"><canvas id="chartGauge"></canvas></div>
+      <div style="display:flex;gap:10px;font-size:10px;color:var(--mt)">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#EF4444;display:inline-block"></span>达成</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:#e4ecf8;display:inline-block"></span>缺口</span>
+      </div>
+    </div>
+    <div class="gcol">
+      <div class="pb">
+        <div class="pbl"><span>💰 QTD 累计收入</span><b>105.18万</b></div>
+        <div class="pbo"><div class="pbi" style="width:67.7%;background:#EF4444"></div></div>
+        <div style="font-size:10px;color:var(--mt);margin-top:3px">目标 155.36万 · 达成 67.7%</div>
+      </div>
+      <div class="pb">
+        <div class="pbl"><span>⏱ Q2 时间进度</span><b>~93.4%</b></div>
+        <div class="pbo"><div class="pbi" style="width:93.4%;background:var(--pri)"></div></div>
+        <div style="font-size:10px;color:var(--mt);margin-top:3px">W25 / Q2末（~W27），剩余约 1~2 周</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="pb"><div class="pbl" style="font-size:10.5px"><span>进度缺口</span><b style="color:var(--err)">- 25.7pt</b></div></div>
+        <div class="pb"><div class="pbl" style="font-size:10.5px"><span>收入缺口</span><b style="color:var(--err)">- 39.93万</b></div></div>
+      </div>
+    </div>
+    <div class="ib wn" style="margin-top:0">
+      <div class="ir"><span class="ii">🚨</span>
+        <span>Q2 进度严重落后 25.7pt：时间进度 93.4% vs 收入进度 67.7%，缺口 39.93万。请重点复盘低费率客户。</span></div>
+      <div class="ir"><span class="ii">💡</span>
+        <span>当月预估 22.81万，按此估算全组 6 月收入贡献已明确。Q2剩余约1-2周，请重点跟进高费率客户续约及新项目启动。</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TREND -->
+<div class="sa" id="s-trend"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">📈</span><span class="st zh">业务规模趋势 · W18–W25</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>过去 8 周，代投规模和服务费质量如何变化？SKU 与客户数是否在增长？</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">代投消耗 &amp; 服务费率趋势<span class="db">万元 / %</span></div>
+    <div class="cs">左轴：代投消耗（万），右轴：服务费率（%）。W25消耗 66.61万，费率 4.25%。</div>
+    <canvas id="chartTrend" style="max-height:180px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">SKU 数 &amp; 客户数趋势<span class="db">SKU = 项目×媒体</span></div>
+    <div class="cs">左轴：SKU 数，右轴：服务客户数。W25 SKU 56，客户 28。</div>
+    <canvas id="chartSKU" style="max-height:180px"></canvas>
+  </div>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <div class="ib st" style="margin-top:0">
+    <div class="ir"><span class="ii">📊</span><span><b>8 周概况：</b>消耗区间 66.61–95.45万，W25消耗 <span style="color:var(--err)">▼6.9%</span> vs W24。服务费率最新 4.25%。</span></div>
+    <div class="ir"><span class="ii">💡</span><span>请关注消耗与SKU数的同步变化，评估是否存在项目缩减风险。W25 消耗 66.61万，WoW <span style="color:var(--err)">▼6.9%</span>（W24: 71.58万）；服务费率 4.25%，费率较上周下降。</span></div>
+  </div>
+</div>
+
+<!-- CLIENT SPEND -->
+<div class="sa" id="s-client"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">🏢</span><span class="st zh">客户消耗趋势</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>Top 3 客户增长轨迹如何？周环比变化是增是减？</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">TOP 3 客户消耗趋势 <span class="db">W24–W25 · 万元</span></div>
+    <div class="cs">Top3：Euro Digitech S.r.l. / 湖南微算互联信息技术有限公司 / MOONSHOT AI PTE. LTD.。注：历史数据仅展示W24-W25两周（数据源限制）</div>
+    <canvas id="chartTop3" style="max-height:200px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">客户全量明细 <span class="db">W25 · 含 WoW 周环比</span></div>
+    <div class="cs">WoW 基于 W25 vs W24；<span style="color:var(--ok);font-weight:600">绿</span>为正增长，<span style="color:var(--err);font-weight:600">红</span>为下降。</div>
+    <div style="overflow-x:auto"><table class="dt" id="clientTable"></table></div>
+  </div>
+</div>
+
+<!-- HR EFFICIENCY -->
+<div class="sa" id="s-hr"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">⚡</span><span class="st zh">团队人效 · 组间对比 &amp; 个人负荷</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>华东组与APP行业均值、其他APP组相比人效如何？8 周内人效走势？组内谁最忙可以分配新项目？</div>
+<div class="card" style="margin-bottom:14px">
+  <div class="ct">华东组 vs APP行业均值 · 人均消耗趋势 <span class="db">W18–W25 · 万/FTE</span></div>
+  <div class="cs">蓝线：华东组人均消耗（万/FTE），灰线：APP行业全组均值。APP-华东组 W25 人均消耗 3.78万/FTE，低于APP行业均值 4.43万/FTE（差0.65万）。</div>
+  <canvas id="chartHRTrend" style="max-height:160px"></canvas>
+  <div class="ib st" style="margin-top:8px">
+    <div class="ir"><span class="ii">📊</span><span>APP-华东组 W25 人均消耗 3.78万/FTE，低于APP行业均值 4.43万/FTE（差0.65万）。</span></div>
+    <div class="ir"><span class="ii">💡</span><span>请关注人效趋势是否与消耗趋势一致，识别效率提升或下滑的原因。</span></div>
+  </div>
+</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">APP各组 人均消耗对比 <span class="db">W25 · 万/FTE</span></div>
+    <div class="cs">华东组当周人均消耗 3.785万/FTE，低于行业平均。</div>
+    <canvas id="chartBenchSpend" style="max-height:155px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">APP各组 人均服务费对比 <span class="db">W25 · 万/FTE</span></div>
+    <div class="cs">各组 W25 人均服务费（万/FTE）对比，华东组以蓝色/绿色高亮显示。</div>
+    <canvas id="chartBenchSF" style="max-height:155px"></canvas>
+  </div>
+</div>
+<div class="card" style="margin-bottom:14px">
+  <div class="ct">个人工作量分布 <span class="db">W25 · SKU 数（项目×媒体）</span></div>
+  <div class="cs"><span style="color:var(--err);font-weight:600">红：&gt;1.5×均值（过载）</span>，<span style="color:var(--warn);font-weight:600">橙：&gt;均值</span>，<span style="color:var(--pri-d);font-weight:600">蓝：&lt;均值</span>。虚线 = 均值 3.7 SKU/人。</div>
+  <canvas id="chartPersonLoad" style="max-height:310px"></canvas>
+  <div class="ib wn" style="margin-top:10px">
+    <div class="ir"><span class="ii">📊</span><span>⚠️ 张惟清（8 SKU）明显超均值 3.7，建议暂缓新增；全组人均 3.7 SKU/人（正式+实习FTE合计17.6）。</span></div>
+  </div>
+</div>
+
+<!-- FTE ALLOCATION -->
+<div class="sa" id="s-alloc"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">🗂</span><span class="st zh">客户 FTE 效率 · W24→W25 变动分析</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>上周哪些客户的 FTE 投入在增加？FTE 增速与消耗增速是否匹配？哪些客户用更少人做出了更高消耗？</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">客户 FTE vs 消耗增速对比 <span class="db">W24→W25 · 气泡大小=W25消耗</span></div>
+    <div class="cs">X轴：消耗WoW（%），Y轴：FTE WoW（%）。右下象限=FTE不增但消耗增=效率提升⭐；左下=双降=规模缩减。</div>
+    <canvas id="chartFTEBubble" style="max-height:280px"></canvas>
+    <div class="bleg">
+      <span><span class="dot" style="background:#17C490"></span>消耗↑ FTE不变（效率增长）</span>
+      <span><span class="dot" style="background:#3b82f6"></span>消耗↑ FTE↑（投入增长）</span>
+      <span><span class="dot" style="background:#10b981"></span>消耗↑ FTE↓（效率大幅提升）</span>
+      <span><span class="dot" style="background:#EF4444"></span>消耗↓ FTE↓（规模缩减）</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">客户 FTE 变动明细 <span class="db">W24→W25</span></div>
+    <div style="overflow-x:auto"><table class="dt" id="fteTable"></table></div>
+  </div>
+</div>
+
+<!-- WORK TYPE -->
+<div class="sa" id="s-wt"></div>
+<div class="divider" style="margin-top:0"></div>
+<div class="sh"><span class="si">🕐</span><span class="st zh">工时分布</span></div>
+<div class="fq"><div class="fql">本模块回答的问题</div>各工作类型工时投入是否在合理范围？不同职级各自在做什么类型的工作？</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">W25 个人工时 &amp; 加班情况 <span class="db">40h/周 = 标准</span></div>
+    <div class="cs">各人 W25 实际填写工时。红：&gt;45h（明显加班），橙：&gt;40h，蓝：&lt;40h。<b style="color:var(--err)">未填工时：施琳芳、李梦园、李茜悦、许佳</b></div>
+    <canvas id="chartPersonHrs" style="max-height:210px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">全组工时趋势 &amp; 填写率 <span class="db">W18–W25 · 小时 / %</span></div>
+    <div class="cs">柱状：全组已填写总工时，折线：填写率（已填工时÷标准工时）。</div>
+    <canvas id="chartTeamHrs" style="max-height:210px"></canvas>
+    <div class="ib wn" style="margin-top:8px">
+      <div class="ir"><span class="ii">⚠️</span><span>W25 工时填写率 69.7%，填写情况良好；1人工时超50h（王姣姣）</span></div>
+    </div>
+  </div>
+</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">工时类型趋势 <span class="db">W18–W25 · 小时</span></div>
+    <div class="cs">三类工时按周变化：执行类（账户搭建/调优）、分析策略类、沟通类。</div>
+    <canvas id="chartWTTrend" style="max-height:195px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">资源结构 · by 职级 × 工时类型 <span class="db">W25 · 各职级工时构成</span></div>
+    <div class="cs">Y 轴为职级，查看各职级工时如何在三类任务间分配。</div>
+    <canvas id="chartWTLevel" style="max-height:195px"></canvas>
+  </div>
+</div>
+<div class="g2" style="margin-bottom:14px">
+  <div class="card">
+    <div class="ct">账户搭建 工时趋势 · by 职级 <span class="db">W18–W25 · 小时</span></div>
+    <canvas id="chartWTSetup" style="max-height:160px"></canvas>
+    <div class="ct" style="margin-top:12px;font-size:11.5px">⛔ W25 账户搭建 <span class="db">by 人分解 · 小时</span></div>
+    <canvas id="chartSetupPerson" style="max-height:100px"></canvas>
+  </div>
+  <div class="card">
+    <div class="ct">报告制作 工时趋势 · by 职级 <span class="db">W18–W25 · 小时</span></div>
+    <canvas id="chartWTReport" style="max-height:160px"></canvas>
+    <div class="ct" style="margin-top:12px;font-size:11.5px">⛔ W25 报告制作 <span class="db">by 人分解 · 小时</span></div>
+    <canvas id="chartRptPerson" style="max-height:100px"></canvas>
+  </div>
+</div>
+</main>
+
+<script>
+// =========================================================
+// DATA
+// =========================================================
+const D = {"weeks": ["W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25"], "spend": [73.681628, 73.013104, 80.739881, 89.148285, 91.51064, 95.446043, 71.583968, 66.610039], "sf": [2.407716, 2.394322, 2.783824, 3.179773, 3.357936, 3.443924, 3.085034, 2.827741], "sfRate": [3.2677, 3.2793, 3.4479, 3.5668, 3.6694, 3.6082, 4.3097, 4.2452], "sku": [61, 60, 63, 60, 61, 66, 57, 56], "clients_w": [25, 25, 27, 28, 29, 32, 29, 28], "hrHD": [4.978488, 4.39838, 4.640223, 5.065243, 5.320386, 5.549189, 4.067271, 3.784661], "hrApp": [6.184239, 5.698442, 5.154709, 5.206213, 5.045092, 5.037665, 4.35999, 4.430387], "q2Rate": 67.7, "q2Target": 155.36, "q2Actual": 105.18, "timeProgress": 93.4, "monthlySF": 22.81, "top3Names": ["Euro Digitech S.r.l.", "湖南微算互联信息技术有限公司", "MOONSHOT AI PTE. LTD."], "top3Colors": ["#0d5eff", "#17C490", "#F59E0B"], "top3Data": [[null, null, null, null, null, null, 14.95307, 13.637754], [null, null, null, null, null, null, 6.387201, 6.591113], [null, null, null, null, null, null, 5.189458, 4.923082]], "clients": [{"n": "Euro Digitech S.r.l.", "s24": 13.6378, "s23": 14.9531, "sf": 0.6378, "wow": -8.8, "pct": 20.47, "projs": 1, "medias": 2}, {"n": "湖南微算互联信息技术有限公司", "s24": 6.5911, "s23": 6.3872, "sf": 0.2839, "wow": 3.19, "pct": 9.9, "projs": 1, "medias": 3}, {"n": "MOONSHOT AI PTE. LTD.", "s24": 4.9231, "s23": 5.1895, "sf": 0.1302, "wow": -5.13, "pct": 7.39, "projs": 1, "medias": 2}, {"n": "Palette Beat Inc", "s24": 4.9178, "s23": 7.0428, "sf": 0.2459, "wow": -30.17, "pct": 7.38, "projs": 1, "medias": 3}, {"n": "Tiger Fintech Hong Kong Limited", "s24": 4.7173, "s23": 4.1672, "sf": 0.1415, "wow": 13.2, "pct": 7.08, "projs": 2, "medias": 2}, {"n": "HIBAYSPARKTECH PH LENDING INC.", "s24": 3.724, "s23": 3.3062, "sf": 0.149, "wow": 12.64, "pct": 5.59, "projs": 7, "medias": 1}, {"n": "TUHU Car （Hong Kong） Limited", "s24": 3.4936, "s23": 3.696, "sf": 0.1747, "wow": -5.48, "pct": 5.24, "projs": 2, "medias": 3}, {"n": "Tamar Edge Limited", "s24": 2.9553, "s23": 2.8939, "sf": 0.0964, "wow": 2.12, "pct": 4.44, "projs": 1, "medias": 2}, {"n": "CYBERSPACE IMAGINATION PTE. LTD.", "s24": 2.3757, "s23": 2.7198, "sf": 0.095, "wow": -12.65, "pct": 3.57, "projs": 1, "medias": 1}, {"n": "HELLOWORLD ONLINE EDUCATION PTE. LTD.", "s24": 2.3637, "s23": 2.3927, "sf": 0.1182, "wow": -1.21, "pct": 3.55, "projs": 1, "medias": 3}, {"n": "DiDi Global Procurement Management (HK) Limited", "s24": 1.9674, "s23": 2.3095, "sf": 0.0689, "wow": -14.81, "pct": 2.95, "projs": 1, "medias": 1}, {"n": "Utell Limited", "s24": 1.9416, "s23": 1.9298, "sf": 0.0971, "wow": 0.61, "pct": 2.91, "projs": 2, "medias": 3}, {"n": "Hyperlink Information Technology Limited 香港超鏈信息技術有限公司", "s24": 1.738, "s23": 1.6795, "sf": 0.0695, "wow": 3.48, "pct": 2.61, "projs": 1, "medias": 1}, {"n": "浙江恒隆芳纶科技有限公司", "s24": 1.6232, "s23": 1.6394, "sf": 0.0812, "wow": -0.99, "pct": 2.44, "projs": 1, "medias": 2}, {"n": "PT Pembiayaan Digital Indonesia", "s24": 1.5658, "s23": 1.3266, "sf": 0.047, "wow": 18.03, "pct": 2.35, "projs": 1, "medias": 1}, {"n": "Forthright Securities Company Limited", "s24": 1.5171, "s23": 1.5401, "sf": 0.0759, "wow": -1.5, "pct": 2.28, "projs": 1, "medias": 1}, {"n": "HOLYMOLLY LIMITED", "s24": 1.4623, "s23": 2.306, "sf": 0.0731, "wow": -36.59, "pct": 2.2, "projs": 1, "medias": 1}, {"n": "YINSHAN LENDING CORP.", "s24": 1.2235, "s23": 1.3613, "sf": 0.0489, "wow": -10.12, "pct": 1.84, "projs": 1, "medias": 2}, {"n": "VCREDIT Horizon Holdings Limited", "s24": 1.1447, "s23": 1.3022, "sf": 0.0572, "wow": -12.1, "pct": 1.72, "projs": 1, "medias": 3}, {"n": "SprayJoy Limited", "s24": 0.7274, "s23": 0.8273, "sf": 0.0364, "wow": -12.08, "pct": 1.09, "projs": 1, "medias": 1}, {"n": "Sunfun Tech Limited", "s24": 0.6118, "s23": 0.4714, "sf": 0.0306, "wow": 29.78, "pct": 0.92, "projs": 1, "medias": 2}, {"n": "SyncTide Network Technology Limited", "s24": 0.4208, "s23": 0.5648, "sf": 0.021, "wow": -25.5, "pct": 0.63, "projs": 1, "medias": 1}, {"n": "MININOVEL LIMITED", "s24": 0.3281, "s23": 0.1672, "sf": 0.0164, "wow": 96.19, "pct": 0.49, "projs": 1, "medias": 1}, {"n": "NOVOLIT LIMITED", "s24": 0.2551, "s23": 0.0836, "sf": 0.0128, "wow": 205.28, "pct": 0.38, "projs": 1, "medias": 1}, {"n": "YING LIANG HK LIMITED", "s24": 0.1796, "s23": 0.2262, "sf": 0.009, "wow": -20.61, "pct": 0.27, "projs": 1, "medias": 1}, {"n": "特赞（上海）信息科技有限公司", "s24": 0.1244, "s23": 0.1491, "sf": 0.0062, "wow": -16.52, "pct": 0.19, "projs": 1, "medias": 1}, {"n": "网易有道信息技术（北京）有限公司", "s24": 0.0536, "s23": 0.0572, "sf": 0.0027, "wow": -6.35, "pct": 0.08, "projs": 1, "medias": 1}, {"n": "上海剑姬网络科技有限公司", "s24": 0.0265, "s23": 0.5895, "sf": 0.0013, "wow": -95.5, "pct": 0.04, "projs": 1, "medias": 1}, {"n": "X Original (HongKong) Limited", "s24": 0.0, "s23": 0.3049, "sf": 0.0, "wow": -100.0, "pct": 0.0, "projs": 0, "medias": 0}], "groups": ["华东组", "华北1组", "华北2组", "华南组"], "groupSpend": [66.61, 63.8899, 29.864, 19.5098], "groupSF": [2.8277, 2.1992, 1.1283, 0.76], "groupFTE": [17.6, 7.0, 8.6, 7.4], "persons": [{"n": "张惟清", "title": "优化主管", "spend": 14.0722, "sku": 8, "cli": 6}, {"n": "欧登燕", "title": "高级优化师", "spend": 9.5997, "sku": 8, "cli": 3}, {"n": "王姣姣", "title": "优化主管", "spend": 4.3292, "sku": 8, "cli": 3}, {"n": "袁箐", "title": "高级优化师", "spend": 8.2057, "sku": 7, "cli": 5}, {"n": "李丹", "title": "高级优化师", "spend": 3.082, "sku": 4, "cli": 3}, {"n": "刘鹏", "title": "高级优化师", "spend": 2.9588, "sku": 3, "cli": 3}, {"n": "施琳芳", "title": "高级优化主管", "spend": 1.9274, "sku": 3, "cli": 1}, {"n": "李茜悦", "title": "优化师", "spend": 3.9268, "sku": 3, "cli": 2}, {"n": "许佳", "title": "高级优化师", "spend": 2.089, "sku": 3, "cli": 3}, {"n": "上官亚男", "title": "高级优化师", "spend": 3.3333, "sku": 2, "cli": 2}, {"n": "周琪", "title": "优化师", "spend": 9.6521, "sku": 2, "cli": 2}, {"n": "李梦园", "title": "高级优化主管", "spend": 1.6129, "sku": 2, "cli": 2}, {"n": "何越", "title": "实习生", "spend": 0.1793, "sku": 1, "cli": 1}, {"n": "周奕", "title": "优化师", "spend": 0.1244, "sku": 1, "cli": 1}, {"n": "姚轶怀", "title": "实习生", "spend": 1.5171, "sku": 1, "cli": 1}], "personAvgSKU": 3.7, "fteVsSpend": [{"n": "广州晶东贸易有限公司", "spendWoW": 103.6, "fteWoW": 0.0, "s24": 13.395, "fteW24": 1.0, "fteW23": 1.0}, {"n": "Euro Digitech S.r.l.", "spendWoW": -9.9, "fteWoW": 0.0, "s24": 12.9768, "fteW24": 1.0, "fteW23": 1.0}, {"n": "湖南微算互联信息技术有限公司", "spendWoW": 3.2, "fteWoW": 0.0, "s24": 6.5911, "fteW24": 0.0, "fteW23": 0.0}, {"n": "Palette Beat Inc", "spendWoW": -22.5, "fteWoW": 0.0, "s24": 5.2397, "fteW24": 1.0, "fteW23": 1.0}, {"n": "MOONSHOT AI PTE. LTD.", "spendWoW": -5.1, "fteWoW": 0.0, "s24": 4.9231, "fteW24": 0.0, "fteW23": 0.0}, {"n": "Tiger Fintech Hong Kong Limited", "spendWoW": 12.5, "fteWoW": 0.0, "s24": 4.7173, "fteW24": 1.0, "fteW23": 1.0}, {"n": "HIBAYSPARKTECH PH LENDING INC.", "spendWoW": 12.6, "fteWoW": 0.0, "s24": 3.724, "fteW24": 1.0, "fteW23": 1.0}, {"n": "TUHU Car （Hong Kong） Limited", "spendWoW": -5.5, "fteWoW": 0.0, "s24": 3.4936, "fteW24": 1.0, "fteW23": 1.0}, {"n": "Tamar Edge Limited", "spendWoW": 2.6, "fteWoW": 0.0, "s24": 3.0236, "fteW24": 0.0, "fteW23": 0.0}, {"n": "CYBERSPACE IMAGINATION PTE. LTD.", "spendWoW": -12.7, "fteWoW": 0.0, "s24": 2.3757, "fteW24": 2.0, "fteW23": 2.0}, {"n": "HELLOWORLD ONLINE EDUCATION PTE. LTD.", "spendWoW": -1.2, "fteWoW": 0.0, "s24": 2.3637, "fteW24": 1.0, "fteW23": 1.0}, {"n": "DiDi Global Procurement Management (HK) Limited", "spendWoW": -14.8, "fteWoW": 0.0, "s24": 1.9674, "fteW24": 0.0, "fteW23": 0.0}, {"n": "Utell Limited", "spendWoW": 0.6, "fteWoW": 0.0, "s24": 1.9416, "fteW24": 0.0, "fteW23": 0.0}, {"n": "PT Pembiayaan Digital Indonesia", "spendWoW": 18.0, "fteWoW": 0.0, "s24": 1.5658, "fteW24": 1.0, "fteW23": 1.0}, {"n": "Forthright Securities Company Limited", "spendWoW": -1.5, "fteWoW": 0.0, "s24": 1.5171, "fteW24": 0.0, "fteW23": 0.0}, {"n": "Hyperlink Information Technology Limited 香港超鏈信息技術有限公司", "spendWoW": 3.5, "fteWoW": 0.0, "s24": 1.4773, "fteW24": 0.2, "fteW23": 0.0}, {"n": "HOLYMOLLY LIMITED", "spendWoW": -36.6, "fteWoW": 0.0, "s24": 1.4623, "fteW24": 2.0, "fteW23": 2.0}, {"n": "浙江恒隆芳纶科技有限公司", "spendWoW": -2.7, "fteWoW": 0.0, "s24": 1.4098, "fteW24": 0.0, "fteW23": 0.0}, {"n": "VCREDIT Horizon Holdings Limited", "spendWoW": -11.8, "fteWoW": 0.0, "s24": 1.1759, "fteW24": 1.0, "fteW23": 1.0}, {"n": "YINSHAN LENDING CORP.", "spendWoW": -13.2, "fteWoW": 0.0, "s24": 1.1154, "fteW24": 0.0, "fteW23": 0.0}, {"n": "Microsoft Corporation", "spendWoW": -26.8, "fteWoW": 0.0, "s24": 0.7968, "fteW24": 0.0, "fteW23": 0.0}, {"n": "SprayJoy Limited", "spendWoW": -12.1, "fteWoW": 0.0, "s24": 0.7274, "fteW24": 1.0, "fteW23": 1.0}, {"n": "Sunfun Tech Limited", "spendWoW": 29.8, "fteWoW": 0.0, "s24": 0.6118, "fteW24": 0.0, "fteW23": 0.0}, {"n": "SyncTide Network Technology Limited", "spendWoW": -25.5, "fteWoW": 0.0, "s24": 0.4208, "fteW24": 0.0, "fteW23": 0.0}, {"n": "MININOVEL LIMITED", "spendWoW": 96.2, "fteWoW": 0.0, "s24": 0.2624, "fteW24": 1.0, "fteW23": 1.0}, {"n": "NOVOLIT LIMITED", "spendWoW": 205.3, "fteWoW": 0.0, "s24": 0.2551, "fteW24": 1.0, "fteW23": 1.0}, {"n": "YING LIANG HK LIMITED", "spendWoW": -20.6, "fteWoW": 0.0, "s24": 0.1616, "fteW24": 0.0, "fteW23": 0.0}, {"n": "特赞（上海）信息科技有限公司", "spendWoW": -16.5, "fteWoW": 0.0, "s24": 0.1244, "fteW24": 1.0, "fteW23": 1.0}, {"n": "网易有道信息技术（北京）有限公司", "spendWoW": -6.4, "fteWoW": 0.0, "s24": 0.0536, "fteW24": 0.0, "fteW23": 0.0}, {"n": "X Original (HongKong) Limited", "spendWoW": -82.9, "fteWoW": 0.0, "s24": 0.044, "fteW24": 1.0, "fteW23": 1.0}, {"n": "深圳无域科技技术有限公司", "spendWoW": 588.2, "fteWoW": 0.0, "s24": 0.0362, "fteW24": 0.0, "fteW23": 0.0}, {"n": "上海剑姬网络科技有限公司", "spendWoW": -95.5, "fteWoW": 0.0, "s24": 0.0265, "fteW24": 1.0, "fteW23": 1.0}, {"n": "UNITED SCIENCE AND EDUCATION PRESS SDN. BHD.", "spendWoW": -69.1, "fteWoW": 0.0, "s24": 0.0003, "fteW24": 0.0, "fteW23": 0.0}], "wtW24Persons": [{"n": "王姣姣", "hrs": 50.2}, {"n": "於煊", "hrs": 36.0}, {"n": "上官亚男", "hrs": 35.5}, {"n": "陈泽溦", "hrs": 35.0}, {"n": "袁箐", "hrs": 33.0}, {"n": "刘鹏", "hrs": 32.0}, {"n": "李丹", "hrs": 32.0}, {"n": "陈澄", "hrs": 32.0}, {"n": "周琪", "hrs": 24.0}, {"n": "庄甜甜", "hrs": 24.0}, {"n": "张惟清", "hrs": 24.0}, {"n": "周奕", "hrs": 21.0}, {"n": "欧登燕", "hrs": 16.0}, {"n": "和玉雪", "hrs": 8.0}, {"n": "秦羽", "hrs": 8.0}], "unfilledPersons": ["施琳芳", "李梦园", "李茜悦", "许佳"], "wtTeamHrs": [271.2, 302.7, 372.1, 410.7, 412.3, 377.5, 359.2, 334.7], "wtTeamStd": [384.0, 440.0, 552.0, 600.0, 600.0, 600.0, 600.0, 480.0], "wtTeamRate": [70.6, 68.8, 67.4, 68.5, 68.7, 62.9, 59.9, 69.7], "wtExec": [92.50000000000001, 44.5, 109.0, 107.6, 108.4, 103.80000000000001, 129.2, 102.5], "wtStrategy": [53.2, 96.3, 132.7, 154.1, 163.5, 159.89999999999998, 145.60000000000002, 57.2], "wtComm": [56.0, 57.900000000000006, 106.4, 88.5, 89.9, 76.80000000000001, 57.9, 40.5], "wtLevelLabels": ["优化师", "高级优化师", "优化主管"], "wtExecByLvl": [21.0, 61.5, 20.0], "wtStratByLvl": [0.0, 56.0, 1.2], "wtCommByLvl": [0.0, 37.0, 3.5], "wtSetupOpt": [NaN, NaN, 2.0, 5.0, 6.5, 4.0, 9.0, NaN], "wtSetupSenior": [30.4, 7.0, 32.9, 26.0, 25.0, 21.0, 23.5, 15.5], "wtSetupMgr": [NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN], "wtReportOpt": [NaN, NaN, 6.0, 14.0, 13.5, 12.0, 13.5, NaN], "wtReportSenior": [15.0, 9.5, 24.0, 22.5, 26.0, 22.5, 38.0, 22.0], "wtReportMgr": [NaN, NaN, NaN, 19.9, 11.4, NaN, NaN, NaN], "wtSetupW24": [{"n": "刘鹏", "hrs": 7.5}, {"n": "上官亚男", "hrs": 4.5}, {"n": "袁箐", "hrs": 3.5}, {"n": "王姣姣", "hrs": 1.0}], "wtRptW24": [{"n": "刘鹏", "hrs": 8.0}, {"n": "上官亚男", "hrs": 7.0}, {"n": "李丹", "hrs": 4.0}, {"n": "袁箐", "hrs": 3.0}, {"n": "王姣姣", "hrs": 0.9}], "levelColors": {"实习生": "#cbd5e1", "优化师": "#93c5fd", "高级优化师": "#3b82f6", "优化主管": "#6ee7b7", "高级优化主管": "#10b981", "总监": "#fbbf24"}};
+
+const BENCH_COLORS_SPEND = ["#0d5eff", "#93c5fd", "#93c5fd", "#93c5fd"];
+const BENCH_COLORS_SF    = ["#17C490", "#6ee7b7", "#6ee7b7", "#6ee7b7"];
+const CURR_GRP = '华东组';
+
+// =========================================================
+// GAUGE
+// =========================================================
+Chart.register({
+  id:'gaugeText',
+  afterDraw(chart){
+    if(chart.canvas.id!=='chartGauge') return;
+    const {ctx,chartArea:{left,top,width,height}} = chart;
+    const cx=left+width/2, cy=top+height/2;
+    ctx.save();
+    ctx.font='bold 22px Inter,"Noto Sans SC",sans-serif'; ctx.fillStyle='#EF4444';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(D.q2Rate+'%', cx, cy-8);
+    ctx.font='10px "Noto Sans SC",Inter,sans-serif'; ctx.fillStyle='#94a3b8';
+    ctx.fillText('Q2 达成率', cx, cy+10); ctx.restore();
+  }
+});
+new Chart(document.getElementById('chartGauge'),{
+  type:'doughnut',
+  data:{datasets:[{data:[D.q2Rate,100-D.q2Rate],backgroundColor:['#EF4444','#e4ecf8'],borderWidth:0,borderRadius:4}]},
+  options:{rotation:-90,cutout:'72%',responsive:true,maintainAspectRatio:true,aspectRatio:1,
+    plugins:{legend:{display:false},tooltip:{enabled:false}},
+    animation:{duration:900,easing:'easeOutQuart'}}
+});
+
+// =========================================================
+// TREND
+// =========================================================
+new Chart(document.getElementById('chartTrend'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:'代投消耗(万)',data:D.spend,yAxisID:'y',borderColor:'#0d5eff',backgroundColor:'rgba(13,94,255,.08)',borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#0d5eff'},
+    {label:'服务费率(%)',data:D.sfRate,yAxisID:'y2',borderColor:'#F59E0B',borderWidth:2,borderDash:[5,4],fill:false,tension:.35,pointRadius:3,pointBackgroundColor:'#F59E0B'},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:8}}},
+    scales:{
+      y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'#f1f5f9'}},
+      y2:{position:'right',ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false}},
+      x:{ticks:{font:{size:10}},grid:{display:false}}
+    }}
+});
+new Chart(document.getElementById('chartSKU'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:'SKU数',data:D.sku,yAxisID:'y',borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.07)',borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#7c3aed'},
+    {label:'客户数',data:D.clients_w,yAxisID:'y2',borderColor:'#17C490',borderWidth:2,borderDash:[5,4],fill:false,tension:.35,pointRadius:3,pointBackgroundColor:'#17C490'},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:8}}},
+    scales:{
+      y:{ticks:{font:{size:10}},grid:{color:'#f1f5f9'}},
+      y2:{position:'right',ticks:{font:{size:10}},grid:{display:false}},
+      x:{ticks:{font:{size:10}},grid:{display:false}}
+    }}
+});
+
+// =========================================================
+// TOP3
+// =========================================================
+new Chart(document.getElementById('chartTop3'),{
+  type:'bar',
+  data:{
+    labels:D.top3Names.length>0?['W24','W25']:[],
+    datasets:D.top3Names.map((name,i)=>{
+      const w24=D.top3Data[i]?D.top3Data[i][6]||0:0;
+      const w25=D.top3Data[i]?D.top3Data[i][7]||0:0;
+      return {label:name,data:[w24,w25],backgroundColor:D.top3Colors[i]+'bb',borderColor:D.top3Colors[i],borderWidth:1,borderRadius:3};
+    })
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:9}}},
+    scales:{
+      y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'#f1f5f9'}},
+      x:{ticks:{font:{size:10}},grid:{display:false}}
+    }}
+});
+
+// =========================================================
+// CLIENT TABLE
+// =========================================================
+(function(){
+  const t=document.getElementById('clientTable');
+  t.innerHTML=`<thead><tr>
+    <th>#</th><th>客户</th>
+    <th class="r">W25消耗(万)</th><th class="r">占比</th>
+    <th class="r">WoW 周环比</th><th class="r">服务费(万)</th>
+    <th class="r">项目数</th><th class="r">渠道数</th>
+  </tr></thead>`;
+  const tb=document.createElement('tbody');
+  D.clients.forEach((c,i)=>{
+    const wCls=c.wow>0?'hi':c.wow<-10?'lo':'neu';
+    const wStr=(c.wow>0?'+':'')+c.wow.toFixed(1)+'%';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:var(--sb);font-size:10.5px">${i+1}</td>
+      <td style="font-weight:500">${c.n}</td>
+      <td class="r">${c.s24.toFixed(3)}</td>
+      <td class="r"><div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+        <div style="width:42px;height:4px;background:#e4ecf8;border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(c.pct/20*100,100)}%;background:${c.pct>15?'var(--warn)':'var(--pri)'}"></div>
+        </div>
+        <span style="font-family:Inter;font-size:10.5px">${c.pct.toFixed(1)}%</span></div></td>
+      <td class="r"><span class="rb ${wCls}">${wStr}</span></td>
+      <td class="r">${c.sf.toFixed(4)}</td>
+      <td class="r" style="color:var(--mt)">${c.projs}</td>
+      <td class="r" style="color:var(--mt)">${c.medias}</td>`;
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+})();
+
+// =========================================================
+// HR TREND
+// =========================================================
+new Chart(document.getElementById('chartHRTrend'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:CURR_GRP+' 人均消耗(万/FTE)',data:D.hrHD,borderColor:'#0d5eff',backgroundColor:'rgba(13,94,255,.1)',borderWidth:2.5,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:'#0d5eff'},
+    {label:'行业均值(万/FTE)',data:D.hrApp,borderColor:'#94a3b8',backgroundColor:'transparent',borderWidth:1.5,borderDash:[5,4],fill:false,tension:.35,pointRadius:3,pointBackgroundColor:'#94a3b8'},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:9}}},
+    scales:{
+      y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'#f1f5f9'}},
+      x:{ticks:{font:{size:10}},grid:{display:false}}
+    }}
+});
+
+// =========================================================
+// BENCHMARK
+// =========================================================
+(function(){
+  const perSpend=D.groupSpend.map((s,i)=>D.groupFTE[i]>0?+(s/D.groupFTE[i]).toFixed(3):0);
+  new Chart(document.getElementById('chartBenchSpend'),{
+    type:'bar',
+    data:{labels:D.groups,datasets:[{label:'人均消耗(万/FTE)',data:perSpend,backgroundColor:BENCH_COLORS_SPEND,borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+  });
+  const perSF=D.groupSF.map((s,i)=>D.groupFTE[i]>0?+(s/D.groupFTE[i]).toFixed(4):0);
+  new Chart(document.getElementById('chartBenchSF'),{
+    type:'bar',
+    data:{labels:D.groups,datasets:[{label:'人均服务费(万/FTE)',data:perSF,backgroundColor:BENCH_COLORS_SF,borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>v+'万',font:{size:10}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+  });
+})();
+
+// =========================================================
+// PERSON LOAD
+// =========================================================
+(function(){
+  const avg=D.personAvgSKU;
+  const cols=D.persons.map(p=>p.sku>avg*1.5?'#EF4444':p.sku>avg?'#F59E0B':'#93c5fd');
+  new Chart(document.getElementById('chartPersonLoad'),{
+    type:'bar',
+    data:{labels:D.persons.map(p=>p.n),datasets:[{label:'SKU数',data:D.persons.map(p=>p.sku),backgroundColor:cols,borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const p=D.persons[c.dataIndex];return[`SKU: ${p.sku}`,`消耗: ${p.spend}万`,`客户: ${p.cli}个`,`职级: ${p.title}`];}}}},
+      layout:{padding:{left:10}},
+      scales:{x:{min:0,ticks:{font:{size:10}},grid:{color:'#f1f5f9'}},y:{ticks:{font:{size:11}},grid:{display:false},afterFit(s){s.width=Math.max(s.width,82)}}}
+    },
+    plugins:[{id:'avgLine',afterDraw(chart){
+      const{ctx,chartArea:{top,bottom},scales:{x}}=chart;
+      const xPx=x.getPixelForValue(avg);
+      ctx.save();ctx.beginPath();ctx.moveTo(xPx,top);ctx.lineTo(xPx,bottom);
+      ctx.strokeStyle='#0d5eff';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.stroke();
+      ctx.setLineDash([]);ctx.font='9px Inter';ctx.fillStyle='#0d5eff';ctx.textAlign='center';
+      ctx.fillText('均值 '+avg,xPx,top-2);ctx.restore();
+    }}]
+  });
+})();
+
+// =========================================================
+// FTE BUBBLE
+// =========================================================
+(function(){
+  function bubbleColor(d){
+    if(d.spendWoW>0&&d.fteWoW<0) return 'rgba(16,185,129,0.75)';
+    if(d.spendWoW>0&&d.fteWoW===0) return 'rgba(23,196,144,0.72)';
+    if(d.spendWoW>0&&d.fteWoW>0) return 'rgba(59,130,246,0.75)';
+    if(d.spendWoW<0&&d.fteWoW<0) return 'rgba(239,68,68,0.72)';
+    return 'rgba(148,163,184,0.7)';
+  }
+  new Chart(document.getElementById('chartFTEBubble'),{
+    type:'bubble',
+    data:{datasets:[{
+      data:D.fteVsSpend.map(d=>{return{x:d.spendWoW,y:d.fteWoW,r:Math.sqrt(d.s24)*2.8+4}}),
+      backgroundColor:D.fteVsSpend.map(bubbleColor),
+      borderColor:D.fteVsSpend.map(d=>{
+        if(d.spendWoW>0&&d.fteWoW<0) return '#10b981';
+        if(d.spendWoW>0&&d.fteWoW===0) return '#17C490';
+        if(d.spendWoW>0&&d.fteWoW>0) return '#3b82f6';
+        if(d.spendWoW<0&&d.fteWoW<0) return '#EF4444';
+        return '#94a3b8';
+      }),borderWidth:1.5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+        const d=D.fteVsSpend[c.dataIndex];
+        return[d.n,`消耗WoW: ${d.spendWoW>0?'+':''}${d.spendWoW}%`,`FTE: ${d.fteW23}→${d.fteW24}`,`W25消耗: ${d.s24}万`];
+      }}}},
+      scales:{
+        x:{title:{display:true,text:'消耗 WoW %（W24→W25）',font:{size:10}},grid:{color:'#f1f5f9'},ticks:{callback:v=>(v>0?'+':'')+v+'%',font:{size:9}}},
+        y:{title:{display:true,text:'FTE WoW %',font:{size:10}},grid:{color:'#f1f5f9'},ticks:{callback:v=>(v>0?'+':'')+v+'%',font:{size:9}}}
+      }
+    },
+    plugins:[{id:'quadrantDecor',afterDraw(chart){
+      const{ctx,chartArea:{left,top,right,bottom},scales:{x,y}}=chart;
+      const x0=x.getPixelForValue(0),y0=y.getPixelForValue(0);
+      ctx.save();
+      ctx.beginPath();ctx.moveTo(x0,top);ctx.lineTo(x0,bottom);
+      ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(left,y0);ctx.lineTo(right,y0);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font='9px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillStyle='rgba(59,130,246,0.4)'; ctx.fillText('📈 投入增长',(x0+right)/2,top+11);
+      ctx.fillStyle='rgba(23,196,144,0.5)'; ctx.fillText('⭐ 效率提升',(x0+right)/2,bottom-6);
+      ctx.fillStyle='rgba(239,68,68,0.4)';  ctx.fillText('📉 规模缩减',(left+x0)/2,bottom-6);
+      ctx.fillStyle='rgba(245,158,11,0.4)'; ctx.fillText('⚠ 效率下降',(left+x0)/2,top+11);
+      ctx.restore();
+    }},{id:'bubbleLbls',afterDraw(chart){
+      const{ctx,scales:{x,y}}=chart;ctx.save();
+      D.fteVsSpend.forEach((d,i)=>{
+        const px=x.getPixelForValue(d.spendWoW),py=y.getPixelForValue(d.fteWoW);
+        const r=Math.sqrt(d.s24)*2.8+4;
+        ctx.font='9px Inter,"Noto Sans SC",sans-serif';ctx.fillStyle='#334155';ctx.textAlign='center';
+        ctx.fillText(d.n,px,py-r-3);
+      });ctx.restore();
+    }}]
+  });
+})();
+
+// =========================================================
+// FTE TABLE
+// =========================================================
+(function(){
+  const t=document.getElementById('fteTable');
+  t.innerHTML=`<thead><tr>
+    <th>客户</th><th class="r">消耗WoW</th><th class="r">W24 FTE</th>
+    <th class="r">W25 FTE</th><th class="r">FTE变化</th><th class="r">效率判断</th>
+  </tr></thead>`;
+  const tb=document.createElement('tbody');
+  [...D.fteVsSpend].sort((a,b)=>b.spendWoW-a.spendWoW).forEach(d=>{
+    let j,jc;
+    if(d.spendWoW>0&&d.fteWoW<0){j='⭐效率大幅提升';jc='hi';}
+    else if(d.spendWoW>0&&d.fteWoW===0){j='✅效率增长';jc='hi';}
+    else if(d.spendWoW>0&&d.fteWoW>0){j='➕投入增长';jc='md';}
+    else if(d.spendWoW<0&&d.fteWoW<0){j='⬇规模缩减';jc='lo';}
+    else{j='—';jc='neu';}
+    const wc=d.spendWoW>0?'hi':d.spendWoW<-10?'lo':'neu';
+    const ws=(d.spendWoW>0?'+':'')+d.spendWoW.toFixed(1)+'%';
+    const fd=(d.fteW24-d.fteW23>0?'+':'')+(d.fteW24-d.fteW23);
+    const fc=d.fteW24>d.fteW23?'hi':d.fteW24<d.fteW23?'lo':'neu';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:500">${d.n}</td>
+      <td class="r"><span class="rb ${wc}">${ws}</span></td>
+      <td class="r" style="color:var(--mt)">${d.fteW23}</td>
+      <td class="r" style="color:var(--mt)">${d.fteW24}</td>
+      <td class="r"><span class="rb ${fc}">${fd}</span></td>
+      <td class="r"><span class="rb ${jc}">${j}</span></td>`;
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+})();
+
+// =========================================================
+// WORK TYPE TREND
+// =========================================================
+new Chart(document.getElementById('chartWTTrend'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:'执行类',data:D.wtExec,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.09)',borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:'#3b82f6'},
+    {label:'分析策略类',data:D.wtStrategy,borderColor:'#17C490',backgroundColor:'rgba(23,196,144,.07)',borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:'#17C490'},
+    {label:'沟通类',data:D.wtComm,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,.07)',borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:'#F59E0B'},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:9}}},
+    scales:{y:{ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+});
+
+// =========================================================
+// PERSON HOURS
+// =========================================================
+(function(){
+  const p=D.wtW24Persons;
+  if(!p||!p.length)return;
+  new Chart(document.getElementById('chartPersonHrs'),{
+    type:'bar',
+    data:{labels:p.map(x=>x.n),datasets:[{label:'W25工时(h)',data:p.map(x=>x.hrs),
+      backgroundColor:p.map(x=>x.hrs>45?'#EF4444':x.hrs>40?'#F59E0B':'#93c5fd'),borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},layout:{padding:{left:8}},
+      scales:{x:{min:0,max:65,ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},
+               y:{ticks:{font:{size:11}},grid:{display:false},afterFit(s){s.width=Math.max(s.width,82)}}}
+    },
+    plugins:[{id:'stdLine',afterDraw(chart){
+      const{ctx,chartArea:{top,bottom},scales:{x}}=chart;
+      const xPx=x.getPixelForValue(40);
+      ctx.save();ctx.beginPath();ctx.moveTo(xPx,top);ctx.lineTo(xPx,bottom);
+      ctx.strokeStyle='#64748b';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.stroke();
+      ctx.setLineDash([]);ctx.font='9px Inter';ctx.fillStyle='#64748b';ctx.textAlign='center';
+      ctx.fillText('40h标准',xPx,top-3);ctx.restore();
+    }}]
+  });
+})();
+
+// =========================================================
+// TEAM HOURS
+// =========================================================
+new Chart(document.getElementById('chartTeamHrs'),{
+  type:'bar',
+  data:{labels:D.weeks,datasets:[
+    {type:'bar',label:'已填总工时(h)',data:D.wtTeamHrs,backgroundColor:'rgba(13,94,255,0.6)',borderRadius:3,yAxisID:'y',order:2},
+    {type:'line',label:'标准工时(h)',data:D.wtTeamStd,borderColor:'#94a3b8',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false,yAxisID:'y',order:1},
+    {type:'line',label:'填写率(%)',data:D.wtTeamRate,borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,0.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#F59E0B',fill:false,tension:.35,yAxisID:'y2',order:0},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{size:10},padding:8}},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      y:{ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},
+      y2:{position:'right',ticks:{callback:v=>v+'%',font:{size:10}},grid:{display:false},min:0,max:150},
+      x:{ticks:{font:{size:10}},grid:{display:false}}
+    }}
+});
+
+// =========================================================
+// WT LEVEL
+// =========================================================
+new Chart(document.getElementById('chartWTLevel'),{
+  type:'bar',
+  data:{labels:D.wtLevelLabels,datasets:[
+    {label:'执行类',data:D.wtExecByLvl,backgroundColor:'#3b82f6',borderRadius:0,borderSkipped:false},
+    {label:'分析策略类',data:D.wtStratByLvl,backgroundColor:'#17C490',borderRadius:0,borderSkipped:false},
+    {label:'沟通类',data:D.wtCommByLvl,backgroundColor:'#F59E0B',borderRadius:3,borderSkipped:false},
+  ]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8,boxWidth:10}}},
+    scales:{x:{stacked:true,ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},y:{stacked:true,ticks:{font:{size:11}},grid:{display:false}}}}
+});
+
+const WT_LEVEL_CFG=[{label:'优化师',color:'#93c5fd'},{label:'高级优化师',color:'#3b82f6'},{label:'优化主管',color:'#6ee7b7'}];
+
+// WT SETUP
+new Chart(document.getElementById('chartWTSetup'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:WT_LEVEL_CFG[0].label,data:D.wtSetupOpt,borderColor:WT_LEVEL_CFG[0].color,borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[0].color},
+    {label:WT_LEVEL_CFG[1].label,data:D.wtSetupSenior,borderColor:WT_LEVEL_CFG[1].color,backgroundColor:WT_LEVEL_CFG[1].color+'18',borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[1].color},
+    {label:WT_LEVEL_CFG[2].label,data:D.wtSetupMgr,borderColor:WT_LEVEL_CFG[2].color,borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[2].color},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},padding:8}}},
+    scales:{y:{ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'},min:0},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+});
+
+// WT REPORT
+new Chart(document.getElementById('chartWTReport'),{
+  type:'line',
+  data:{labels:D.weeks,datasets:[
+    {label:WT_LEVEL_CFG[0].label,data:D.wtReportOpt,borderColor:WT_LEVEL_CFG[0].color,borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[0].color},
+    {label:WT_LEVEL_CFG[1].label,data:D.wtReportSenior,borderColor:WT_LEVEL_CFG[1].color,backgroundColor:WT_LEVEL_CFG[1].color+'18',borderWidth:2,fill:true,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[1].color},
+    {label:WT_LEVEL_CFG[2].label,data:D.wtReportMgr,borderColor:WT_LEVEL_CFG[2].color,borderWidth:2,fill:false,tension:.35,pointRadius:3,pointBackgroundColor:WT_LEVEL_CFG[2].color},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},padding:8}}},
+    scales:{y:{ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'},min:0},x:{ticks:{font:{size:10}},grid:{display:false}}}}
+});
+
+// SETUP BY PERSON
+(function(){
+  const d=D.wtSetupW24; if(!d||!d.length)return;
+  const mx=Math.max(...d.map(x=>x.hrs));
+  new Chart(document.getElementById('chartSetupPerson'),{
+    type:'bar',
+    data:{labels:d.map(x=>x.n),datasets:[{label:'W25搭建工时(h)',data:d.map(x=>x.hrs),
+      backgroundColor:d.map(x=>x.hrs===mx?'#EF4444':'#93c5fd'),borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      layout:{padding:{left:8}},
+      scales:{x:{min:0,ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},
+               y:{ticks:{font:{size:11}},grid:{display:false},afterFit(s){s.width=Math.max(s.width,72)}}}
+    }
+  });
+})();
+
+// REPORT BY PERSON
+(function(){
+  const d=D.wtRptW24; if(!d||!d.length)return;
+  const mx=Math.max(...d.map(x=>x.hrs));
+  new Chart(document.getElementById('chartRptPerson'),{
+    type:'bar',
+    data:{labels:d.map(x=>x.n),datasets:[{label:'W25报告工时(h)',data:d.map(x=>x.hrs),
+      backgroundColor:d.map(x=>x.hrs===mx?'#EF4444':'#93c5fd'),borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      layout:{padding:{left:8}},
+      scales:{x:{min:0,ticks:{callback:v=>v+'h',font:{size:10}},grid:{color:'#f1f5f9'}},
+               y:{ticks:{font:{size:11}},grid:{display:false},afterFit(s){s.width=Math.max(s.width,72)}}}
+    }
+  });
+})();
+
+// NAV
+const SECS=['s-kpi','s-target','s-trend','s-client','s-hr','s-alloc','s-wt'];
+function onScroll(){
+  const m=document.getElementById('main'),st=m.scrollTop+80;
+  let act=SECS[0];
+  SECS.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop<=st)act=id;});
+  document.querySelectorAll('.nl').forEach(l=>{
+    const h=(l.getAttribute('onclick')||'').match(/goto\('(.+?)'\)/);
+    if(h)l.classList.toggle('act',h[1]===act);
+  });
+}
+window.goto=function(id){document.getElementById('main').scrollTop=document.getElementById(id).offsetTop-10;};
+(function(){const s=localStorage.getItem('dLang')||'zh';document.documentElement.setAttribute('lang',s);})();
+window.toggleLang=function(){
+  const c=document.documentElement.getAttribute('lang');
+  const n=c==='zh'?'en':'zh';
+  document.documentElement.setAttribute('lang',n);localStorage.setItem('dLang',n);
+};
+</script>
+</body>
+</html>
