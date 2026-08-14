@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JD 解读 & 简历生成器 | AI 求职助手</title>
+    <style>
+:root {
+    --primary:       #4f46e5;
+    --primary-h:     #3730a3;
+    --primary-light: #e0e7ff;
+    --primary-faint: #f5f3ff;
+    --success:       #10b981;
+    --success-light: #d1fae5;
+    --error:         #ef4444;
+    --error-light:   #fee2e2;
+    --bg:            #f1f5f9;
+    --surface:       #ffffff;
+    --border:        #e2e8f0;
+    --text:          #1e293b;
+    --text-2:        #475569;
+    --text-3:        #94a3b8;
+    --shadow:        0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+    --shadow-sm:     0 1px 2px rgba(0,0,0,.06);
+    --r:             12px;
+    --rsm:           8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ---- Header ---- */
+.header {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    box-shadow: var(--shadow-sm);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 15px; font-weight: 800; flex-shrink: 0;
+    letter-spacing: -1px;
+}
+.brand h1 { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
+.brand p  { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+.btn-settings {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--rsm);
+    background: var(--surface); cursor: pointer; font-size: 13px;
+    color: var(--text-2); transition: .15s; font-family: inherit;
+}
+.btn-settings:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-faint); }
+.dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    transition: background .3s;
+}
+.dot-ok  { background: var(--success); }
+.dot-err { background: var(--error); }
+.dot-na  { background: var(--text-3); }
+
+/* ---- Settings Panel ---- */
+.settings-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden; max-height: 0;
+    transition: max-height .32s ease;
+}
+.settings-wrap.open { max-height: 260px; }
+.settings-inner { padding: 20px 28px; }
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 180px auto;
+    gap: 14px; align-items: flex-end;
+}
+.field label {
+    display: block; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px;
+    color: var(--text-3); margin-bottom: 7px;
+}
+.field input {
+    width: 100%; height: 38px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: var(--rsm);
+    font-size: 13px; color: var(--text); font-family: inherit;
+    outline: none; transition: .15s; background: var(--bg);
+}
+.field input:focus {
+    border-color: var(--primary); background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+.provider-row { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+.chip {
+    padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    color: var(--text-2); cursor: pointer; transition: .15s;
+    font-family: inherit; background: var(--bg);
+}
+.chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-faint); }
+.settings-hint { font-size: 11.5px; color: var(--text-3); margin-top: 10px; line-height: 1.7; }
+
+/* ---- Layout ---- */
+.layout {
+    max-width: 1380px; margin: 0 auto;
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 20px; align-items: start;
+}
+
+/* ---- Card ---- */
+.card {
+    background: var(--surface); border-radius: var(--r);
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    overflow: hidden;
+}
+.card-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.card-body { padding: 18px; }
+
+/* ---- JD Textarea ---- */
+textarea.jd {
+    width: 100%; min-height: 340px;
+    padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--rsm);
+    font-size: 13px; line-height: 1.8; color: var(--text);
+    resize: vertical; font-family: inherit; outline: none; transition: .15s;
+    background: #fafafa;
+}
+textarea.jd:focus {
+    border-color: var(--primary); background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+}
+textarea.jd::placeholder { color: var(--text-3); }
+.char-count { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.action-row { display: flex; gap: 10px; margin-top: 14px; }
+.btn-p, .btn-o {
+    flex: 1; height: 40px; border-radius: var(--rsm);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit; border: none;
+}
+.btn-p { background: var(--primary); color: #fff; }
+.btn-p:hover:not(:disabled) {
+    background: var(--primary-h);
+    box-shadow: 0 4px 14px rgba(79,70,229,.32);
+    transform: translateY(-1px);
+}
+.btn-o { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+.btn-o:hover:not(:disabled) { background: var(--primary-light); transform: translateY(-1px); }
+.btn-p:disabled, .btn-o:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+/* ---- Tips ---- */
+.tips { padding: 14px 16px; }
+.tips-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--text-3); margin-bottom: 8px;
+}
+.steps { list-style: none; }
+.steps li { font-size: 12px; color: var(--text-2); padding: 4px 0; display: flex; gap: 8px; }
+.num {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--primary-light); color: var(--primary);
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+
+/* ---- Tabs ---- */
+.tabs-bar {
+    display: flex; background: var(--bg); border-radius: 8px;
+    padding: 3px; flex: 1;
+}
+.tab-btn {
+    flex: 1; height: 32px; border: none; background: transparent;
+    border-radius: 6px; font-size: 13px; font-weight: 600;
+    color: var(--text-3); cursor: pointer; transition: .15s; font-family: inherit;
+}
+.tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ---- Empty State ---- */
+.empty {
+    padding: 56px 20px; text-align: center;
+}
+.empty-icon { font-size: 44px; line-height: 1; margin-bottom: 12px; }
+.empty-t { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.empty-d { font-size: 12px; color: var(--text-3); line-height: 1.8; }
+
+/* ---- Loading ---- */
+.loading {
+    display: none; padding: 24px 18px;
+    align-items: center; gap: 10px;
+    color: var(--primary); font-size: 13px; font-weight: 500;
+}
+.loading.show { display: flex; }
+.spin {
+    width: 18px; height: 18px;
+    border: 2px solid var(--primary-light); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- Error State ---- */
+.err-box { display: none; }
+
+/* ---- Analysis Result ---- */
+.result-area { padding: 18px; }
+.pos-banner {
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border-radius: 10px; padding: 16px; margin-bottom: 18px;
+}
+.pos-name {
+    font-size: 20px; font-weight: 800;
+    color: var(--primary-h); letter-spacing: -.5px; margin-bottom: 8px;
+}
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    background: rgba(255,255,255,.75); color: var(--primary-h);
+    border: 1px solid rgba(79,70,229,.2);
+}
+.sec-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: var(--text-3);
+    margin-bottom: 8px; margin-top: 16px;
+}
+.tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.tr { background: #ede9fe; color: #5b21b6; }
+.tp { background: #d1fae5; color: #065f46; }
+.tk { background: #fef9c3; color: #713f12; }
+.fn-list { list-style: none; }
+.fn-list li {
+    font-size: 13px; color: var(--text);
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.6;
+}
+.fn-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.arr { color: var(--primary); flex-shrink: 0; font-size: 12px; margin-top: 2px; }
+
+/* ---- Streaming ---- */
+.stream-area { padding: 18px; }
+.stream-out {
+    font-size: 13px; line-height: 1.85; color: var(--text);
+    transition: opacity .2s;
+}
+.stream-out h2 {
+    font-size: 14px; font-weight: 700; color: var(--primary);
+    margin: 20px 0 10px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--primary-light);
+}
+.stream-out h2:first-child { margin-top: 0; }
+.stream-out h3 { font-size: 13px; font-weight: 700; color: var(--text); margin: 10px 0 5px; }
+.stream-out p { margin-bottom: 6px; }
+.stream-out ul { list-style: none; padding: 0; }
+.stream-out li { padding: 3px 0 3px 16px; position: relative; }
+.stream-out li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
+.stream-out strong { font-weight: 700; }
+.cursor {
+    display: inline-block; color: var(--primary);
+    animation: blink 1s step-end infinite;
+    margin-left: 1px; vertical-align: text-bottom;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ---- Resume Sections ---- */
+.resume-wrap { padding: 6px 18px 18px; }
+.regen-row { display: flex; justify-content: flex-end; margin-bottom: 2px; padding-top: 12px; }
+.btn-regen {
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 7px;
+    background: var(--surface); font-size: 12px; color: var(--text-2);
+    cursor: pointer; font-family: inherit; transition: .15s;
+}
+.btn-regen:hover { border-color: var(--primary); color: var(--primary); }
+.r-sec {
+    margin-top: 18px; padding-bottom: 18px;
+    border-bottom: 1px dashed var(--border);
+}
+.r-sec:last-child { border-bottom: none; }
+.r-sec-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+}
+.r-sec-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.btn-copy {
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); font-size: 12px; color: var(--text-3);
+    cursor: pointer; transition: .15s; font-family: inherit; white-space: nowrap;
+}
+.btn-copy:hover { border-color: var(--success); color: var(--success); }
+.btn-copy.done { border-color: var(--success); color: var(--success); background: var(--success-light); }
+.r-body {
+    background: var(--bg); border-radius: 8px; padding: 14px;
+    font-size: 13px; line-height: 1.85;
+}
+.r-body h2 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.r-body h3 { font-size: 13px; font-weight: 700; color: var(--text); margin: 8px 0 5px; }
+.r-body p { margin-bottom: 6px; color: var(--text); }
+.r-body ul { list-style: none; padding: 0; }
+.r-body li { padding: 3px 0 3px 16px; position: relative; color: var(--text); }
+.r-body li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: 700; }
+.r-body strong { font-weight: 700; }
+.copy-all-row { display: flex; justify-content: center; margin-top: 18px; }
+.btn-copy-all {
+    padding: 10px 28px;
+    background: var(--primary); color: #fff; border: none;
+    border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: .15s; font-family: inherit;
+    display: flex; align-items: center; gap: 6px;
+}
+.btn-copy-all:hover { background: var(--primary-h); box-shadow: 0 4px 14px rgba(79,70,229,.3); }
+
+/* ---- Save Button (in Settings) ---- */
+.btn-save {
+    height: 38px; padding: 0 18px;
+    background: var(--primary); color: #fff; border: none;
+    border-radius: var(--rsm); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: .15s; font-family: inherit; white-space: nowrap;
+}
+.btn-save:hover { background: var(--primary-h); }
+
+/* ---- Toast ---- */
+.toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; font-weight: 500; z-index: 9999;
+    transform: translateY(80px) scale(.95); opacity: 0;
+    transition: .25s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none; max-width: 340px;
+}
+.toast.show { transform: translateY(0) scale(1); opacity: 1; }
+.t-ok  { background: var(--success-light); color: #064e3b; border: 1px solid #6ee7b7; }
+.t-err { background: var(--error-light);   color: #7f1d1d; border: 1px solid #fca5a5; }
+.t-inf { background: var(--primary-light); color: #312e81; border: 1px solid #a5b4fc; }
+
+/* ---- Footer ---- */
+footer {
+    text-align: center; padding: 20px 28px;
+    font-size: 12px; color: var(--text-3); border-top: 1px solid var(--border);
+    margin-top: 20px;
+}
+footer a { color: var(--text-3); }
+
+/* ---- Responsive ---- */
+@media (max-width: 960px) {
+    .layout { grid-template-columns: 1fr; padding: 16px; }
+    .settings-grid { grid-template-columns: 1fr 1fr; }
+    .settings-grid .btn-save { grid-column: 1 / -1; height: 40px; }
+    .header { padding: 12px 16px; }
+    .settings-inner { padding: 16px; }
+}
+@media (max-width: 640px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .brand p { display: none; }
+    .action-row { flex-direction: column; }
+}
+    </style>
+</head>
+<body>
+
+<!-- ========== Header ========== -->
+<header class="header">
+    <div class="brand">
+        <div class="logo">JD</div>
+        <div>
+            <h1>JD 解读 &amp; 简历生成器</h1>
+            <p>粘贴招聘 JD，AI 自动分析岗位要求并生成匹配简历内容</p>
+        </div>
+    </div>
+    <button class="btn-settings" onclick="toggleSettings()" id="settingsBtn">
+        <span class="dot dot-na" id="apiDot"></span>
+        ⚙ API 设置
+    </button>
+</header>
+
+<!-- ========== Settings Panel ========== -->
+<div class="settings-wrap" id="settingsWrap">
+    <div class="settings-inner">
+        <div class="settings-grid">
+            <div class="field">
+                <label>API Key</label>
+                <input type="password" id="apiKey" placeholder="sk-..." autocomplete="new-password">
+            </div>
+            <div class="field">
+                <label>Base URL</label>
+                <input type="text" id="baseUrl" placeholder="https://api.openai.com">
+            </div>
+            <div class="field">
+                <label>模型名称</label>
+                <input type="text" id="modelName" placeholder="gpt-4o-mini">
+            </div>
+            <button class="btn-save" onclick="saveSettings()">保存设置</button>
+        </div>
+        <div class="provider-row">
+            <span style="font-size:11px;color:var(--text-3);align-self:center;margin-right:4px;">快捷填入：</span>
+            <button class="chip" onclick="fillProvider('https://api.openai.com','gpt-4o-mini')">OpenAI</button>
+            <button class="chip" onclick="fillProvider('https://api.deepseek.com','deepseek-chat')">DeepSeek</button>
+            <button class="chip" onclick="fillProvider('https://api.moonshot.cn','moonshot-v1-8k')">Moonshot</button>
+            <button class="chip" onclick="fillProvider('https://api.siliconflow.cn','Qwen/Qwen2.5-7B-Instruct')">硅基流动</button>
+        </div>
+        <p class="settings-hint">
+            🔒 API Key 仅存储在本地浏览器（localStorage），不经过任何服务器。支持 OpenAI、DeepSeek、Moonshot 等 OpenAI 格式兼容接口。
+        </p>
+    </div>
+</div>
+
+<!-- ========== Main Layout ========== -->
+<div class="layout">
+
+    <!-- Left: Input -->
+    <div>
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">📋 粘贴招聘 JD</span>
+                <span class="char-count" id="charCount">0 字</span>
+            </div>
+            <div class="card-body">
+                <textarea class="jd" id="jdInput"
+                    placeholder="把招聘岗位的 JD（职位描述）粘贴到这里&#10;&#10;包含岗位职责、任职要求、技能要求等内容均可&#10;AI 将提取关键信息并生成匹配的简历内容草稿&#10;&#10;⌨ Ctrl + Enter 快速分析"
+                    oninput="onJdInput()"
+                    onkeydown="handleKey(event)"
+                ></textarea>
+                <div class="action-row">
+                    <button class="btn-p" id="btnAnalyze" onclick="analyzeJD()">
+                        🔍 分析 JD
+                    </button>
+                    <button class="btn-o" id="btnGenerate" onclick="generateResume()">
+                        ✨ 生成简历内容
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card tips" style="margin-top:16px;">
+            <div class="tips-title">使用步骤</div>
+            <ul class="steps">
+                <li><span class="num">1</span><span>先点击「分析 JD」拆解岗位要求结构</span></li>
+                <li><span class="num">2</span><span>再点击「生成简历内容」获取草稿（流式输出）</span></li>
+                <li><span class="num">3</span><span>点击各模块的复制按钮，填入你的简历</span></li>
+                <li><span class="num">4</span><span>AI 内容仅供参考，请结合真实经历修改后使用</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Right: Results -->
+    <div class="card" style="min-height:520px;">
+        <div class="card-head">
+            <div class="tabs-bar">
+                <button class="tab-btn active" id="tbAnalysis" onclick="switchTab('analysis')">📊 JD 分析结果</button>
+                <button class="tab-btn"        id="tbResume"   onclick="switchTab('resume')">📄 简历内容草稿</button>
+            </div>
+        </div>
+
+        <!-- Analysis Pane -->
+        <div class="tab-pane active" id="paneAnalysis">
+            <div class="empty" id="aEmpty">
+                <div class="empty-icon">🔍</div>
+                <div class="empty-t">暂无分析结果</div>
+                <div class="empty-d">点击左侧「分析 JD」按钮<br>AI 将提取岗位名称、必备技能、加分项等关键信息</div>
+            </div>
+            <div class="loading" id="aLoading"><div class="spin"></div><span>正在分析 JD 结构，请稍候...</span></div>
+            <div class="err-box" id="aError"></div>
+            <div id="aResult" style="display:none;"></div>
+        </div>
+
+        <!-- Resume Pane -->
+        <div class="tab-pane" id="paneResume">
+            <div class="empty" id="rEmpty">
+                <div class="empty-icon">✨</div>
+                <div class="empty-t">暂无简历内容</div>
+                <div class="empty-d">点击左侧「生成简历内容」按钮<br>AI 将流式生成与 JD 高度匹配的简历草稿</div>
+            </div>
+            <div class="loading" id="rLoading"><div class="spin"></div><span>正在生成简历内容，请稍候...</span></div>
+            <div class="err-box" id="rError"></div>
+            <div id="rStreaming" style="display:none;" class="stream-area">
+                <div id="streamOut" class="stream-out"></div>
+            </div>
+            <div id="rResult" style="display:none;"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+    AI 生成内容仅供参考，请结合实际工作经历修改后使用 &nbsp;·&nbsp;
+    纯静态页面，无服务器，<a href="https://github.com" target="_blank">GitHub Pages</a> 直接部署
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ===================================================
+   CONSTANTS
+   =================================================== */
+const STORE_KEY = 'jd_resume_v3';
+const DEF = { baseUrl: 'https://api.openai.com', model: 'gpt-4o-mini' };
+const _sec = {}; // raw section texts for copy
+
+/* ===================================================
+   SETTINGS
+   =================================================== */
+function loadSettings() {
+    const s = read();
+    document.getElementById('apiKey').value   = s.apiKey   || '';
+    document.getElementById('baseUrl').value  = s.baseUrl  || DEF.baseUrl;
+    document.getElementById('modelName').value= s.model    || DEF.model;
+    setDot(!!s.apiKey);
+}
+
+function saveSettings() {
+    const s = {
+        apiKey:  document.getElementById('apiKey').value.trim(),
+        baseUrl: document.getElementById('baseUrl').value.trim() || DEF.baseUrl,
+        model:   document.getElementById('modelName').value.trim() || DEF.model
+    };
+    if (!s.apiKey) { toast('请填写 API Key', 'err'); return; }
+    localStorage.setItem(STORE_KEY, JSON.stringify(s));
+    setDot(true);
+    toast('✓ 设置已保存', 'ok');
+    document.getElementById('settingsWrap').classList.remove('open');
+}
+
+function read() { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+
+function fillProvider(url, model) {
+    document.getElementById('baseUrl').value   = url;
+    document.getElementById('modelName').value = model;
+}
+
+function toggleSettings() {
+    document.getElementById('settingsWrap').classList.toggle('open');
+}
+
+function setDot(ok) {
+    const d = document.getElementById('apiDot');
+    d.className = 'dot ' + (ok ? 'dot-ok' : 'dot-na');
+}
+
+/* ===================================================
+   UI HELPERS
+   =================================================== */
+let _toastT = null;
+function toast(msg, type = 'inf', dur = 3000) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast show t-${type}`;
+    clearTimeout(_toastT);
+    _toastT = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+function onJdInput() {
+    const n = document.getElementById('jdInput').value.length;
+    document.getElementById('charCount').textContent = n.toLocaleString() + ' 字';
+}
+
+function handleKey(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); analyzeJD(); }
+}
+
+function switchTab(t) {
+    ['analysis','resume'].forEach(k => {
+        document.getElementById('pane' + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === t);
+        document.getElementById('tb'   + k[0].toUpperCase() + k.slice(1)).classList.toggle('active', k === t);
+    });
+}
+
+async function copyText(text, btn) {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+    if (btn) {
+        const prev = btn.innerHTML;
+        btn.classList.add('done'); btn.textContent = '✓ 已复制';
+        setTimeout(() => { btn.classList.remove('done'); btn.innerHTML = prev; }, 2000);
+    }
+    toast('已复制到剪贴板', 'ok', 2000);
+}
+
+/* ===================================================
+   VALIDATION
+   =================================================== */
+function validate() {
+    const s = read();
+    if (!s.apiKey) {
+        toast('⚠ 请先在 API 设置中填写 API Key', 'err');
+        document.getElementById('settingsWrap').classList.add('open');
+        return false;
+    }
+    const jd = document.getElementById('jdInput').value.trim();
+    if (!jd)       { toast('⚠ 请先粘贴招聘 JD 内容', 'err'); return false; }
+    if (jd.length < 30) { toast('⚠ JD 内容过短，请粘贴完整招聘描述', 'err'); return false; }
+    return true;
+}
+
+/* ===================================================
+   API
+   =================================================== */
+function endpoint() {
+    const s = read();
+    return (s.baseUrl || DEF.baseUrl).replace(/\/$/, '') + '/v1/chat/completions';
+}
+function headers() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (read().apiKey || '') };
+}
+function mdl() { return read().model || DEF.model; }
+
+async function apiJSON(messages) {
+    const res = await fetch(endpoint(), {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ model: mdl(), messages, stream: false, temperature: 0.2 })
+    });
+    if (!res.ok) throw await parseErr(res);
+    const d = await res.json();
+    return d.choices?.[0]?.message?.content || '';
+}
+
+async function apiStream(messages, onToken, onDone) {
+    const res = await fetch(endpoint(), {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ model: mdl(), messages, stream: true, temperature: 0.7 })
+    });
+    if (!res.ok) throw await parseErr(res);
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', full = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const ln of lines) {
+            const t = ln.trim();
+            if (!t || t === 'data: [DONE]') continue;
+            if (t.startsWith('data: ')) {
+                try {
+                    const obj = JSON.parse(t.slice(6));
+                    const tok = obj.choices?.[0]?.delta?.content ?? '';
+                    if (tok) { full += tok; onToken(tok, full); }
+                } catch {}
+            }
+        }
+    }
+    onDone(full);
+}
+
+async function parseErr(res) {
+    let msg = `请求失败（HTTP ${res.status}）`;
+    try { const e = await res.json(); msg = e.error?.message || msg; } catch {}
+    if (res.status === 401) msg = 'API Key 无效或已过期，请检查设置';
+    if (res.status === 429) msg = '请求太频繁，请稍后重试';
+    if (res.status === 400) msg = '请求参数错误，请检查模型名称是否正确';
+    return new Error(msg);
+}
+
+/* ===================================================
+   MARKDOWN RENDERER (lightweight)
+   =================================================== */
+function md(raw) {
+    if (!raw) return '';
+    // 1. Escape HTML
+    let s = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // 2. Bold
+    s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    // 3. Line-by-line
+    const lines = s.split('\n');
+    const out = []; let inUl = false;
+    for (const ln of lines) {
+        if      (ln.startsWith('## '))  { closeUl(); out.push(`<h2>${ln.slice(3)}</h2>`); }
+        else if (ln.startsWith('### ')) { closeUl(); out.push(`<h3>${ln.slice(4)}</h3>`); }
+        else if (ln.startsWith('# '))   { closeUl(); out.push(`<h2>${ln.slice(2)}</h2>`); }
+        else if (/^[•\-\*] /.test(ln)) {
+            if (!inUl) { out.push('<ul>'); inUl = true; }
+            out.push(`<li>${ln.slice(2)}</li>`);
+        } else if (ln.trim() === '') {
+            closeUl(); out.push('');
+        } else {
+            closeUl(); out.push(`<p>${ln}</p>`);
+        }
+    }
+    closeUl();
+    return out.join('\n');
+
+    function closeUl() { if (inUl) { out.push('</ul>'); inUl = false; } }
+}
+
+/* ===================================================
+   JD ANALYSIS
+   =================================================== */
+const A_SYS = '你是专业招聘分析师。用户给你一段 JD，请仅返回 JSON，不要输出任何其他内容，不要使用 markdown 代码块。';
+
+function aMsg(jd) {
+    return [
+        { role: 'system', content: A_SYS },
+        { role: 'user', content: `分析以下 JD，严格返回如下 JSON 结构（不要任何额外文字）：
+
+{
+  "position": "岗位名称",
+  "level": "级别（初级/中级/高级/专家/管理/不限，根据JD推断）",
+  "experience_required": "经验要求（如：3年以上；没有则写不限）",
+  "education_required": "学历要求（如：本科及以上；没有则写不限）",
+  "core_functions": ["核心职责1", "核心职责2", "核心职责3"],
+  "required_skills": ["必备技能1", "必备技能2"],
+  "preferred_skills": ["加分技能1"],
+  "keywords": ["关键词1", "关键词2"]
+}
+
+规则：core_functions 3-5 条；required_skills 5-8 个；preferred_skills 2-5 个（没有返回 []）；keywords 6-10 个。
+
+JD：\n${jd}` }
+    ];
+}
+
+async function analyzeJD() {
+    if (!validate()) return;
+    const jd = document.getElementById('jdInput').value.trim();
+
+    show('aEmpty', false); show('aError', false); show('aResult', false);
+    show('aLoading', true, 'flex');
+    switchTab('analysis');
+
+    const btn = document.getElementById('btnAnalyze');
+    setBtnLoading(btn, true, '分析中');
+
+    try {
+        const raw = await apiJSON(aMsg(jd));
+        let data;
+        try {
+            const clean = raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
+            // Extract first JSON object in case there's surrounding text
+            const m = clean.match(/\{[\s\S]*\}/);
+            data = JSON.parse(m ? m[0] : clean);
+        } catch { throw new Error('AI 返回格式异常，请重试'); }
+
+        show('aLoading', false);
+        renderAnalysis(data);
+        toast('✓ JD 分析完成', 'ok');
+    } catch (e) {
+        show('aLoading', false);
+        showErr('aError', e.message);
+        toast(e.message, 'err', 5000);
+    } finally { setBtnLoading(btn, false, '🔍 分析 JD'); }
+}
+
+function renderAnalysis(d) {
+    const el = document.getElementById('aResult');
+    show('aResult', true);
+
+    const tag = (txt, cls) => `<span class="tag ${cls}">${esc(txt)}</span>`;
+    const reqT  = (d.required_skills  || []).map(x => tag(x,'tr')).join('');
+    const prefT = (d.preferred_skills || []).map(x => tag(x,'tp')).join('');
+    const kwT   = (d.keywords         || []).map(x => tag(x,'tk')).join('');
+    const fns   = (d.core_functions   || []).map(f =>
+        `<li><span class="arr">→</span>${esc(f)}</li>`
+    ).join('');
+
+    el.innerHTML = `
+    <div class="result-area">
+        <div class="pos-banner">
+            <div class="pos-name">${esc(d.position || '未知岗位')}</div>
+            <div class="badge-row">
+                <span class="badge">🎯 ${esc(d.level || '不限')}</span>
+                <span class="badge">⏱ ${esc(d.experience_required || '不限')}</span>
+                <span class="badge">🎓 ${esc(d.education_required || '不限')}</span>
+            </div>
+        </div>
+        ${kwT   ? `<div class="sec-label">🏷 核心关键词（简历对标参考）</div><div class="tags-wrap">${kwT}</div>` : ''}
+        ${reqT  ? `<div class="sec-label">⚡ 必备技能</div><div class="tags-wrap">${reqT}</div>` : ''}
+        ${prefT ? `<div class="sec-label">✨ 加分技能</div><div class="tags-wrap">${prefT}</div>` : ''}
+        ${fns   ? `<div class="sec-label">📌 核心职能</div><ul class="fn-list">${fns}</ul>` : ''}
+    </div>`;
+}
+
+/* ===================================================
+   RESUME GENERATION
+   =================================================== */
+const R_SYS = '你是专业简历写作专家，擅长根据招聘 JD 撰写中文简历内容。内容要专业、具体、有说服力。';
+
+function rMsg(jd) {
+    return [
+        { role: 'system', content: R_SYS },
+        { role: 'user', content: `根据以下招聘 JD，生成一份高度匹配的简历内容草稿。严格按四个部分输出，用 ## 标题区分：
+
+## 个人总结
+
+3-4 句话的个人总结，突出与岗位最相关的核心优势和职业定位，语言简洁有力。
+
+## 核心技能
+
+8-10 个与岗位匹配的技能点，每行以 • 开头，涵盖技术技能和软技能。
+
+## 工作经历示例
+
+4-5 条 STAR 格式的工作经历 bullet point，每条以强动词开头，体现具体成果，适当加入数字量化。
+格式：• [动词] [做了什么] [方法/工具] [成果（数字）]
+
+## 项目经历示例
+
+2-3 个项目经历模板，格式：
+**[项目名称（示例）]**
+• 项目背景：[一句话背景]
+• 主要职责：[2-3 条具体职责]
+• 项目成果：[量化成果，如缩短 XX% 时间]
+
+所有内容用中文，括号内为可替换的占位说明。
+
+招聘 JD：\n${jd}` }
+    ];
+}
+
+async function generateResume() {
+    if (!validate()) return;
+    const jd = document.getElementById('jdInput').value.trim();
+
+    show('rEmpty', false); show('rError', false);
+    show('rResult', false); show('rStreaming', false);
+    show('rLoading', true, 'flex');
+    switchTab('resume');
+
+    const btn = document.getElementById('btnGenerate');
+    setBtnLoading(btn, true, '生成中');
+
+    let started = false;
+    const streamEl = document.getElementById('streamOut');
+
+    try {
+        await apiStream(
+            rMsg(jd),
+            (tok, full) => {
+                if (!started) {
+                    started = true;
+                    show('rLoading', false);
+                    show('rStreaming', true);
+                }
+                streamEl.innerHTML = md(full) + '<span class="cursor">▋</span>';
+            },
+            (full) => {
+                show('rStreaming', false);
+                renderResume(full);
+                toast('✓ 简历内容生成完成', 'ok');
+            }
+        );
+    } catch (e) {
+        show('rLoading',   false);
+        show('rStreaming', false);
+        showErr('rError', e.message);
+        toast(e.message, 'err', 5000);
+    } finally { setBtnLoading(btn, false, '✨ 生成简历内容'); }
+}
+
+function parseSections(content) {
+    const secs = []; let cur = null;
+    for (const ln of content.split('\n')) {
+        if (ln.startsWith('## ')) {
+            if (cur) secs.push(cur);
+            cur = { title: ln.slice(3).trim(), lines: [] };
+        } else if (cur) { cur.lines.push(ln); }
+    }
+    if (cur) secs.push(cur);
+    return secs.map(s => ({ title: s.title, content: s.lines.join('\n').trim() }));
+}
+
+const SEC_ICONS = { '个人总结':'👤', '核心技能':'⚡', '工作经历示例':'💼', '项目经历示例':'🚀' };
+
+function renderResume(full) {
+    const secs = parseSections(full);
+    const el   = document.getElementById('rResult');
+
+    let html = `<div class="resume-wrap">
+        <div class="regen-row">
+            <button class="btn-regen" onclick="generateResume()">↻ 重新生成</button>
+        </div>`;
+
+    if (!secs.length) {
+        // Fallback: show raw render
+        html += `<div class="stream-area"><div class="stream-out">${md(full)}</div></div>`;
+    } else {
+        secs.forEach((s, i) => {
+            const id   = 'rsec' + i;
+            const icon = SEC_ICONS[s.title] || '📝';
+            _sec[id]   = s.content;
+            html += `
+            <div class="r-sec">
+                <div class="r-sec-head">
+                    <div class="r-sec-title">${icon} ${esc(s.title)}</div>
+                    <button class="btn-copy" onclick="copySection('${id}', this)">⧉ 复制</button>
+                </div>
+                <div class="r-body">${md(s.content)}</div>
+            </div>`;
+        });
+
+        const allText = secs.map(s => `## ${s.title}\n\n${s.content}`).join('\n\n');
+        _sec['__all__'] = allText;
+        html += `
+        <div class="copy-all-row">
+            <button class="btn-copy-all" onclick="copyAll(this)">📋 复制全部内容</button>
+        </div>`;
+    }
+
+    html += '</div>';
+    el.innerHTML = html;
+    show('rResult', true);
+}
+
+function copySection(id, btn) { copyText(_sec[id] || '', btn); }
+function copyAll(btn)          { copyText(_sec['__all__'] || '', btn); }
+
+/* ===================================================
+   DOM UTILS
+   =================================================== */
+function show(id, visible, display = 'block') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (visible) {
+        el.style.display = display;
+        // For loading divs that use class
+        if (el.classList.contains('loading')) el.classList.add('show');
+    } else {
+        el.style.display = 'none';
+        if (el.classList.contains('loading')) el.classList.remove('show');
+    }
+}
+
+function showErr(id, msg) {
+    const el = document.getElementById(id);
+    el.style.display = 'block';
+    el.innerHTML = `
+        <div class="empty">
+            <div class="empty-icon">⚠️</div>
+            <div class="empty-t" style="color:var(--error)">${esc(msg)}</div>
+            <div class="empty-d">请检查 API 设置后重试</div>
+        </div>`;
+}
+
+function setBtnLoading(btn, loading, label) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+        ? `<div class="spin" style="width:13px;height:13px;border-width:2px"></div> ${label}`
+        : label;
+}
+
+function esc(s) {
+    return String(s || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ===================================================
+   INIT
+   =================================================== */
+(function init() {
+    loadSettings();
+    // Auto-open settings on first visit
+    if (!read().apiKey) document.getElementById('settingsWrap').classList.add('open');
+    // Restore loading display: use class-based toggle for loading divs
+    // Override show() for elements with class 'loading'
+    ['aLoading','rLoading'].forEach(id => {
+        const el = document.getElementById(id);
+        // normalize: use flex via class, not inline style
+        el.style.removeProperty('display');
+    });
+})();
+</script>
+
+</body>
+</html>
